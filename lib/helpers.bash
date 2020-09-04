@@ -19,9 +19,11 @@ function _command_exists ()
 {
   _about 'checks for existence of a command'
   _param '1: command to check'
+  _param '2: (optional) log message to include when command not found'
   _example '$ _command_exists ls && echo exists'
   _group 'lib'
-  type "$1" &> /dev/null ;
+  local msg="${2:-Command '$1' does not exist!}"
+  type "$1" &> /dev/null || (_log_warning "$msg" && return 1) ;
 }
 
 function _make_reload_alias() {
@@ -43,7 +45,7 @@ alias reload_plugins="$(_make_reload_alias plugin plugins)"
 bash-it ()
 {
     about 'Bash-it help and maintenance'
-    param '1: verb [one of: help | show | enable | disable | migrate | update | search | version | reload ] '
+    param '1: verb [one of: help | show | enable | disable | migrate | update | search | version | reload | doctor ] '
     param '2: component type [one of: alias(es) | completion(s) | plugin(s) ] or search term(s)'
     param '3: specific component [optional]'
     example '$ bash-it show plugins'
@@ -55,6 +57,7 @@ bash-it ()
     example '$ bash-it search [-|@]term1 [-|@]term2 ... [ -e/--enable ] [ -d/--disable ] [ -r/--refresh ] [ -c/--no-color ]'
     example '$ bash-it version'
     example '$ bash-it reload'
+    example '$ bash-it doctor errors|warnings|all'
     typeset verb=${1:-}
     shift
     typeset component=${1:-}
@@ -70,6 +73,8 @@ bash-it ()
         func=_disable-$component;;
       help)
         func=_help-$component;;
+      doctor)
+        func=_bash-it-doctor-$component;;
       search)
         _bash-it-search $component "$@"
         return;;
@@ -261,6 +266,44 @@ _bash-it-version() {
   echo "Compare to latest: $BASH_IT_GIT_URL/compare/$BASH_IT_GIT_SHA...master"
 
   cd - &> /dev/null || return
+}
+
+_bash-it-doctor() {
+  _about 'reloads a profile file with a BASH_IT_LOG_LEVEL set'
+  _param '1: BASH_IT_LOG_LEVEL argument: "errors" "warnings" "all"'
+  _group 'lib'
+
+  BASH_IT_LOG_LEVEL=$1
+  _bash-it-reload
+  unset BASH_IT_LOG_LEVEL
+}
+
+_bash-it-doctor-all() {
+  _about 'reloads a profile file with error, warning and debug logs'
+  _group 'lib'
+
+  _bash-it-doctor $BASH_IT_LOG_LEVEL_ALL
+}
+
+_bash-it-doctor-warnings() {
+  _about 'reloads a profile file with error and warning logs'
+  _group 'lib'
+
+  _bash-it-doctor $BASH_IT_LOG_LEVEL_WARNING
+}
+
+_bash-it-doctor-errors() {
+  _about 'reloads a profile file with error logs'
+  _group 'lib'
+
+  _bash-it-doctor $BASH_IT_LOG_LEVEL_ERROR
+}
+
+_bash-it-doctor-() {
+  _about 'default bash-it doctor behavior, behaves like bash-it doctor all'
+  _group 'lib'
+
+  _bash-it-doctor-all
 }
 
 _bash-it-reload() {
