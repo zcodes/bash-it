@@ -31,7 +31,7 @@ __bobby_clock() {
 }
 
 function prompt_command() {
-    PS1="${TITLEBAR}\n${green}#$(virtualenv_prompt) $(__bobby_clock)${yellow}$(ruby_version_prompt) ${purple}\h ${reset_color}in ${green}\w\n${cyan}${green}=>${reset_color} "
+    PS1="${TITLEBAR}\n${green}#$(virtualenv_prompt) $(clock_prompt)${yellow}$(ruby_version_prompt) ${purple}\h ${reset_color}in ${green}\w\n${cyan}${green}=>${reset_color} "
 }
 
 THEME_SHOW_CLOCK_CHAR=${THEME_SHOW_CLOCK_CHAR:-"true"}
